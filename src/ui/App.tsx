@@ -16,10 +16,20 @@ interface Props {
   alternates: LanAddress[]
   qr: string
   server: ShareServer
+  uploadEnabled: boolean
   onExit: () => Promise<void>
 }
 
-export function App({ dir, port, primary, alternates, qr, server, onExit }: Props) {
+export function App({
+  dir,
+  port,
+  primary,
+  alternates,
+  qr,
+  server,
+  uploadEnabled,
+  onExit,
+}: Props) {
   const ink = useApp()
   const [entries, setEntries] = useState<LogEntry[]>([])
   const [status, setStatus] = useState<'starting' | 'listening' | 'error'>('listening')
@@ -76,7 +86,7 @@ export function App({ dir, port, primary, alternates, qr, server, onExit }: Prop
 
   return (
     <Box flexDirection="column">
-      <Header dir={dir} url={primaryUrl} status={status} />
+      <Header dir={dir} url={primaryUrl} status={status} uploadEnabled={uploadEnabled} />
       <QRPanel
         qr={qr}
         primaryUrl={primaryUrl}

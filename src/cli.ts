@@ -13,6 +13,31 @@ interface CliOptions {
   port: string
   host?: string
   qr: boolean
+  upload: boolean
+  maxUploadSize: string
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n}B`
+  if (n < 1024 ** 2) return `${(n / 1024).toFixed(1)}KB`
+  if (n < 1024 ** 3) return `${(n / 1024 ** 2).toFixed(1)}MB`
+  return `${(n / 1024 ** 3).toFixed(2)}GB`
+}
+
+function parseSize(input: string): number {
+  const m = /^(\d+(?:\.\d+)?)\s*(b|k|kb|m|mb|g|gb)?$/i.exec(input.trim())
+  if (!m) throw new Error(`invalid size: ${input}`)
+  const n = Number(m[1])
+  const unit = (m[2] ?? 'b').toLowerCase()
+  const mul =
+    unit === 'g' || unit === 'gb'
+      ? 1024 ** 3
+      : unit === 'm' || unit === 'mb'
+        ? 1024 ** 2
+        : unit === 'k' || unit === 'kb'
+          ? 1024
+          : 1
+  return Math.floor(n * mul)
 }
 
 async function main() {
@@ -24,6 +49,12 @@ async function main() {
     .option('-p, --port <number>', 'starting port (auto-increments if taken)', '8000')
     .option('-h, --host <ip>', 'bind to a specific LAN IP (default: auto-pick preferred)')
     .option('--no-qr', 'do not render QR code (for non-TTY use)')
+    .option('--no-upload', 'disable file uploads (read-only mode)')
+    .option(
+      '--max-upload-size <size>',
+      'cap upload size per file (e.g. 500m, 2g, 0 = unlimited)',
+      '5g',
+    )
     .version('0.1.0')
     .parse()
 
@@ -79,7 +110,20 @@ async function main() {
   }
 
   // Start server
-  const server = new ShareServer({ dir, port })
+  const uploadEnabled = opts.upload !== false
+  let maxUploadSize: number | undefined
+  try {
+    const parsed = parseSize(opts.maxUploadSize)
+    maxUploadSize = parsed > 0 ? parsed : undefined
+  } catch (err) {
+    fail((err as Error).message)
+  }
+  const server = new ShareServer({
+    dir,
+    port,
+    upload: uploadEnabled,
+    maxUploadSize,
+  })
   try {
     await server.start()
   } catch (err) {
@@ -102,6 +146,13 @@ async function main() {
     for (const a of alternates) {
       console.log(`  Alternate: http://${a.address}:${port}/  (${a.iface})`)
     }
+    console.log(
+      `Upload: ${
+        uploadEnabled
+          ? `enabled (max ${maxUploadSize ? formatBytes(maxUploadSize) : 'unlimited'})`
+          : 'disabled'
+      }`,
+    )
     console.log('Press Ctrl+C to stop')
     let stopping = false
     const shutdown = async () => {
@@ -136,6 +187,7 @@ async function main() {
       alternates,
       qr,
       server,
+      uploadEnabled,
       onExit: shutdown,
     }),
   )

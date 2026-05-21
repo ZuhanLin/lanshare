@@ -5,9 +5,10 @@ interface Props {
   dir: string
   url: string
   status: 'starting' | 'listening' | 'error'
+  uploadEnabled: boolean
 }
 
-export function Header({ dir, url, status }: Props) {
+export function Header({ dir, url, status, uploadEnabled }: Props) {
   const statusText =
     status === 'listening'
       ? { color: 'green' as const, label: `🟢 Listening on ${url}` }
@@ -20,6 +21,9 @@ export function Header({ dir, url, status }: Props) {
         📂 <Text bold>{dir}</Text>
       </Text>
       <Text color={statusText.color}>{statusText.label}</Text>
+      <Text color={uploadEnabled ? 'cyan' : 'gray'}>
+        {uploadEnabled ? '📤 Upload: enabled' : '🔒 Upload: disabled (read-only)'}
+      </Text>
     </Box>
   )
 }
