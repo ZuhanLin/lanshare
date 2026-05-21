@@ -1,0 +1,134 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { Command } from 'commander'
+import React from 'react'
+import { render } from 'ink'
+import { getLanAddresses, type LanAddress } from './network.ts'
+import { findFreePort } from './port.ts'
+import { renderQR } from './qr.ts'
+import { ShareServer } from './server.ts'
+import { App } from './ui/App.tsx'
+
+interface CliOptions {
+  port: string
+  host?: string
+  qr: boolean
+}
+
+async function main() {
+  const program = new Command()
+  program
+    .name('lanshare')
+    .description('Share a folder over your LAN via HTTP with a scannable QR code')
+    .argument('[dir]', 'directory to share', process.cwd())
+    .option('-p, --port <number>', 'starting port (auto-increments if taken)', '8000')
+    .option('-h, --host <ip>', 'bind to a specific LAN IP (default: auto-pick preferred)')
+    .option('--no-qr', 'do not render QR code (for non-TTY use)')
+    .version('0.1.0')
+    .parse()
+
+  const opts = program.opts<CliOptions>()
+  const dirArg = program.args[0] ?? process.cwd()
+  const dir = path.resolve(dirArg)
+
+  // Validate directory
+  try {
+    const stat = fs.statSync(dir)
+    if (!stat.isDirectory()) {
+      fail(`directory '${dir}' is not a directory`)
+    }
+    fs.accessSync(dir, fs.constants.R_OK)
+  } catch {
+    fail(`directory '${dir}' does not exist or is not readable`)
+  }
+
+  // Resolve LAN addresses
+  const addresses = getLanAddresses()
+  if (addresses.length === 0) {
+    fail('no LAN interface found; are you connected to a network?')
+  }
+
+  let primary: LanAddress
+  let alternates: LanAddress[]
+  if (opts.host) {
+    const match = addresses.find((a) => a.address === opts.host)
+    if (!match) {
+      fail(
+        `${opts.host} is not a local interface; available: ${addresses
+          .map((a) => a.address)
+          .join(', ')}`,
+      )
+    }
+    primary = match
+    alternates = addresses.filter((a) => a.address !== primary.address)
+  } else {
+    primary = addresses[0]
+    alternates = addresses.slice(1)
+  }
+
+  // Find a free port
+  const startPort = Number(opts.port)
+  if (!Number.isInteger(startPort) || startPort < 1 || startPort > 65535) {
+    fail(`invalid port: ${opts.port}`)
+  }
+  let port: number
+  try {
+    port = await findFreePort(startPort)
+  } catch (err) {
+    fail((err as Error).message)
+  }
+
+  // Start server
+  const server = new ShareServer({ dir, port })
+  try {
+    await server.start()
+  } catch (err) {
+    fail(`failed to start server: ${(err as Error).message}`)
+  }
+
+  const primaryUrl = `http://${primary.address}:${port}/`
+
+  // Render QR (or skip)
+  let qr = ''
+  if (opts.qr && process.stdout.isTTY) {
+    qr = await renderQR(primaryUrl)
+  } else {
+    // Plain mode: just print URLs and keep server running until SIGINT
+    console.log(`Sharing ${dir}`)
+    console.log(`Primary URL: ${primaryUrl}`)
+    for (const a of alternates) {
+      console.log(`  Alternate: http://${a.address}:${port}/  (${a.iface})`)
+    }
+    console.log('Press Ctrl+C to stop')
+    process.on('SIGINT', async () => {
+      await server.stop()
+      process.exit(0)
+    })
+    return
+  }
+
+  // Render TUI
+  const stopServer = () => server.stop()
+  const { waitUntilExit } = render(
+    React.createElement(App, {
+      dir,
+      port,
+      primary,
+      alternates,
+      qr,
+      server,
+      onExit: stopServer,
+    }),
+  )
+  await waitUntilExit()
+}
+
+function fail(msg: string): never {
+  process.stderr.write(`Error: ${msg}\n`)
+  process.exit(1)
+}
+
+main().catch((err) => {
+  process.stderr.write(`Fatal: ${err?.stack ?? err}\n`)
+  process.exit(1)
+})
