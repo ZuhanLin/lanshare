@@ -11,6 +11,11 @@ export interface RequestEntry {
   bytes: number
 }
 
+export interface RequestErrorPayload {
+  err: Error
+  entry: Partial<RequestEntry>
+}
+
 export interface ShareServerOptions {
   dir: string
   port: number
@@ -60,7 +65,16 @@ export class ShareServer extends EventEmitter {
         })
 
         handler(req, res, { public: this.opts.dir }).catch((err: Error) => {
-          this.emit('error', err)
+          const payload: RequestErrorPayload = {
+            err,
+            entry: {
+              time: new Date(),
+              method,
+              path: reqPath,
+              ip: req.socket.remoteAddress ?? '?',
+            },
+          }
+          this.emit('requestError', payload)
           if (!res.headersSent) {
             res.writeHead(500)
             res.end('Internal Server Error')
