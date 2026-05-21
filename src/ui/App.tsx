@@ -1,0 +1,72 @@
+import React, { useEffect, useState } from 'react'
+import { Box, useApp, useInput } from 'ink'
+import { Header } from './Header.tsx'
+import { QRPanel } from './QRPanel.tsx'
+import { Logs } from './Logs.tsx'
+import { Footer } from './Footer.tsx'
+import type { ShareServer, RequestEntry } from '../server.ts'
+import type { LanAddress } from '../network.ts'
+
+const MAX_LOGS = 20
+
+interface Props {
+  dir: string
+  port: number
+  primary: LanAddress
+  alternates: LanAddress[]
+  qr: string
+  server: ShareServer
+  onExit: () => Promise<void>
+}
+
+export function App({ dir, port, primary, alternates, qr, server, onExit }: Props) {
+  const ink = useApp()
+  const [entries, setEntries] = useState<RequestEntry[]>([])
+  const [status, setStatus] = useState<'starting' | 'listening' | 'error'>('listening')
+
+  useEffect(() => {
+    const onRequest = (e: RequestEntry) => {
+      setEntries((prev) => {
+        const next = [...prev, e]
+        return next.length > MAX_LOGS ? next.slice(next.length - MAX_LOGS) : next
+      })
+    }
+    const onError = () => setStatus('error')
+    server.on('request', onRequest)
+    server.on('error', onError)
+    return () => {
+      server.off('request', onRequest)
+      server.off('error', onError)
+    }
+  }, [server])
+
+  useInput(async (input, key) => {
+    if (key.ctrl && input === 'c') {
+      await onExit()
+      ink.exit()
+    } else if (input === 'q') {
+      await onExit()
+      ink.exit()
+    }
+  })
+
+  const primaryUrl = `http://${primary.address}:${port}/`
+  const altMapped = alternates.map((a) => ({
+    url: `http://${a.address}:${port}/`,
+    address: a,
+  }))
+
+  return (
+    <Box flexDirection="column">
+      <Header dir={dir} url={primaryUrl} status={status} />
+      <QRPanel
+        qr={qr}
+        primaryUrl={primaryUrl}
+        primaryIface={primary.iface}
+        alternates={altMapped}
+      />
+      <Logs entries={entries} />
+      <Footer />
+    </Box>
+  )
+}
