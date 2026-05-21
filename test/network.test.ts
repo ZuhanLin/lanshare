@@ -61,4 +61,14 @@ describe('sortLanAddresses', () => {
     ])
     expect(sorted[0].address).toBe('172.16.0.1')
   })
+
+  it('deprioritizes tunnel interfaces below physical ones', () => {
+    const sorted = sortLanAddresses([
+      { iface: 'utun5', address: '192.168.255.254' },
+      { iface: 'en0', address: '172.16.0.154' },
+      { iface: 'utun4', address: '30.43.131.47' },
+    ])
+    expect(sorted[0]).toEqual({ iface: 'en0', address: '172.16.0.154' })
+    expect(sorted.slice(1).map((s) => s.iface).sort()).toEqual(['utun4', 'utun5'])
+  })
 })

@@ -22,7 +22,13 @@ export function filterLanAddresses(
   return out
 }
 
-function priority(address: string): number {
+const TUNNEL_IFACE = /^(utun|tun|tap|ipsec|ppp|wg|gif|stf)\d*$/i
+
+function isTunnel(iface: string): boolean {
+  return TUNNEL_IFACE.test(iface)
+}
+
+function addressPriority(address: string): number {
   if (address.startsWith('192.168.')) return 0
   if (address.startsWith('10.')) return 1
   const m = address.match(/^172\.(\d+)\./)
@@ -33,8 +39,13 @@ function priority(address: string): number {
   return 3
 }
 
+function priority(addr: LanAddress): number {
+  const ifaceRank = isTunnel(addr.iface) ? 10 : 0
+  return ifaceRank + addressPriority(addr.address)
+}
+
 export function sortLanAddresses(addrs: LanAddress[]): LanAddress[] {
-  return [...addrs].sort((a, b) => priority(a.address) - priority(b.address))
+  return [...addrs].sort((a, b) => priority(a) - priority(b))
 }
 
 export function getLanAddresses(): LanAddress[] {
