@@ -68,13 +68,18 @@ export class ShareServer extends EventEmitter {
         })
       })
 
+      let started = false
       server.on('error', (err) => {
-        reject(err)
-        this.emit('error', err)
+        if (!started) {
+          reject(err)
+        } else {
+          this.emit('error', err)
+        }
       })
 
       const host = this.opts.host ?? '0.0.0.0'
       server.listen(this.opts.port, host, () => {
+        started = true
         this.server = server
         const addr = server.address()
         const port = typeof addr === 'object' && addr ? addr.port : this.opts.port
