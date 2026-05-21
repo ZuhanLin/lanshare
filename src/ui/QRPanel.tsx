@@ -15,12 +15,12 @@ export function QRPanel({ qr, primaryUrl, primaryIface, alternates }: Props) {
       <Text>{qr}</Text>
       <Box marginTop={1}>
         <Text>
-          扫码访问: <Text bold color="cyan">{primaryUrl}</Text> <Text dimColor>({primaryIface})</Text>
+          Scan to open: <Text bold color="cyan">{primaryUrl}</Text> <Text dimColor>({primaryIface})</Text>
         </Text>
       </Box>
       {alternates.length > 0 && (
         <Box flexDirection="column" marginTop={1}>
-          <Text dimColor>备用地址:</Text>
+          <Text dimColor>Alternate addresses:</Text>
           {alternates.map((a) => (
             <Text key={a.url} dimColor>
               {'  '}
