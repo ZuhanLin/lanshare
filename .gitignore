@@ -3,3 +3,22 @@ dist
 .DS_Store
 *.log
 coverage
+
+# Editor / tooling local state
+.idea/
+.vscode/
+.claude/
+.aone_copilot/
+
+# Internal planning docs (kept out of public repo)
+docs/superpowers/
+
+# Stale TS-emitted artifacts (build outputs go to dist/)
+src/**/*.js
+src/**/*.d.ts
+src/**/*.js.map
+
+# npm
+*.tgz
+.npm
+.eslintcache
