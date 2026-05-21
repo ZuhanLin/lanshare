@@ -116,7 +116,18 @@ async function main() {
   }
 
   // Render TUI
-  const stopServer = () => server.stop()
+  let stopping = false
+  const shutdown = async () => {
+    if (stopping) return
+    stopping = true
+    await server.stop()
+  }
+  const signalShutdown = async () => {
+    await shutdown()
+    process.exit(0)
+  }
+  process.on('SIGINT', signalShutdown)
+  process.on('SIGTERM', signalShutdown)
   const { waitUntilExit } = render(
     React.createElement(App, {
       dir,
@@ -125,7 +136,7 @@ async function main() {
       alternates,
       qr,
       server,
-      onExit: stopServer,
+      onExit: shutdown,
     }),
   )
   await waitUntilExit()
