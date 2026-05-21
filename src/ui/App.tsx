@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Box, useApp, useInput } from 'ink'
 import { Header } from './Header.tsx'
 import { QRPanel } from './QRPanel.tsx'
@@ -40,13 +40,16 @@ export function App({ dir, port, primary, alternates, qr, server, onExit }: Prop
     }
   }, [server])
 
+  const exiting = useRef(false)
   useInput(async (input, key) => {
-    if (key.ctrl && input === 'c') {
-      await onExit()
-      ink.exit()
-    } else if (input === 'q') {
-      await onExit()
-      ink.exit()
+    if (exiting.current) return
+    if ((key.ctrl && input === 'c') || input === 'q') {
+      exiting.current = true
+      try {
+        await onExit()
+      } finally {
+        ink.exit()
+      }
     }
   })
 
