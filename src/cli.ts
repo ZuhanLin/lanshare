@@ -94,16 +94,24 @@ async function main() {
     qr = await renderQR(primaryUrl)
   } else {
     // Plain mode: just print URLs and keep server running until SIGINT
+    server.on('error', (err) => {
+      process.stderr.write(`Server error: ${err.message}\n`)
+    })
     console.log(`Sharing ${dir}`)
     console.log(`Primary URL: ${primaryUrl}`)
     for (const a of alternates) {
       console.log(`  Alternate: http://${a.address}:${port}/  (${a.iface})`)
     }
     console.log('Press Ctrl+C to stop')
-    process.on('SIGINT', async () => {
+    let stopping = false
+    const shutdown = async () => {
+      if (stopping) return
+      stopping = true
       await server.stop()
       process.exit(0)
-    })
+    }
+    process.on('SIGINT', shutdown)
+    process.on('SIGTERM', shutdown)
     return
   }
 
