@@ -1,14 +1,14 @@
 import net from 'node:net'
 
 export function isPortFree(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const server = net.createServer()
     server.unref()
     server.once('error', (err: NodeJS.ErrnoException) => {
-      if (err.code === 'EADDRINUSE' || err.code === 'EACCES') {
+      if (err.code === 'EADDRINUSE') {
         resolve(false)
       } else {
-        resolve(false)
+        reject(err)
       }
     })
     server.listen(port, '127.0.0.1', () => {
