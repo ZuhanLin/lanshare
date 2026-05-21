@@ -33,13 +33,13 @@
   ],
   "author": "linzuhan",
   "license": "MIT",
-  "homepage": "https://github.com/linzuhan/lanshare#readme",
+  "homepage": "https://github.com/ZuhanLin/lanshare#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/linzuhan/lanshare.git"
+    "url": "git+https://github.com/ZuhanLin/lanshare.git"
   },
   "bugs": {
-    "url": "https://github.com/linzuhan/lanshare/issues"
+    "url": "https://github.com/ZuhanLin/lanshare/issues"
   },
   "publishConfig": {
     "access": "public",

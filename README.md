@@ -119,7 +119,7 @@ npm run test:watch
 npm run build        # tsup → dist/cli.js
 ```
 
-PRs and issues welcome at [github.com/linzuhan/lanshare](https://github.com/linzuhan/lanshare).
+PRs and issues welcome at [github.com/ZuhanLin/lanshare](https://github.com/ZuhanLin/lanshare).
 
 ## 📄 License
 
