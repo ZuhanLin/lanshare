@@ -2,9 +2,13 @@
 
 > Share a folder over your LAN via HTTP, with a scannable QR code and phone-to-PC upload — zero config, zero browser plugin, zero cloud.
 
-[![npm](https://img.shields.io/npm/v/lanshare.svg)](https://www.npmjs.com/package/lanshare)
+[![npm](https://img.shields.io/npm/v/@linzuhan/lanshare.svg)](https://www.npmjs.com/package/@linzuhan/lanshare)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="lanshare CLI screenshot" width="640">
+</p>
 
 [简体中文](#简体中文) · English
 
