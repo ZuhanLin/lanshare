@@ -26,10 +26,10 @@ Requires Node.js `>= 18`.
 
 ```bash
 # One-shot — no install
-npx lanshare
+npx @linzuhan/lanshare
 
 # Or install globally
-npm install -g lanshare
+npm install -g @linzuhan/lanshare
 ```
 
 ## 🚀 Quick start
@@ -147,10 +147,10 @@ PRs and issues welcome at [github.com/ZuhanLin/lanshare](https://github.com/Zuha
 
 ```bash
 # 免安装直接跑
-npx lanshare
+npx @linzuhan/lanshare
 
 # 或全局安装
-npm install -g lanshare
+npm install -g @linzuhan/lanshare
 ```
 
 ### 🚀 快速开始

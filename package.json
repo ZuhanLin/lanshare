@@ -1,5 +1,5 @@
 {
-  "name": "lanshare",
+  "name": "@linzuhan/lanshare",
   "version": "0.1.0",
   "description": "Share a folder over your LAN via HTTP with a scannable QR code and phone-to-PC upload",
   "type": "module",
