@@ -8,7 +8,7 @@ function occupy(port: number): Promise<number> {
   return new Promise((resolve, reject) => {
     const s = net.createServer()
     s.once('error', reject)
-    s.listen(port, '127.0.0.1', () => {
+    s.listen(port, '0.0.0.0', () => {
       servers.push(s)
       resolve((s.address() as net.AddressInfo).port)
     })
